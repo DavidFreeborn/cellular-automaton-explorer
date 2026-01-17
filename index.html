@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cellular Automaton Explorer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Welcome Screen */
+        #welcome-screen {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        #welcome-screen h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .welcome-content {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .welcome-content h2 {
+            color: #2c3e50;
+            font-size: 1.2em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .welcome-content h2:first-child {
+            margin-top: 0;
+        }
+
+        .welcome-content h3 {
+            color: #34495e;
+            font-size: 1em;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+
+        .rule-name {
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .welcome-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .welcome-footer label {
+            font-weight: 500;
+        }
+
+        .welcome-footer select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #ddd;
+        }
+
+        /* Simulation Screen */
+        #simulation-screen {
+            display: none;
+            min-height: calc(100vh - 40px);
+        }
+
+        #simulation-screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-shrink: 0;
+        }
+
+        .sim-header h1 {
+            color: #2c3e50;
+            font-size: 1.5em;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Canvas Panel */
+        .canvas-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .canvas-container {
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            flex: 1;
+            min-height: 300px;
+        }
+
+        #sim-canvas {
+            display: block;
+            background: white;
+            cursor: default;
+        }
+
+        #sim-canvas.drawing-mode {
+            cursor: crosshair;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        .info-panel h2 {
+            color: #2c3e50;
+            font-size: 1.3em;
+            margin-bottom: 5px;
+        }
+
+        .binary-rep {
+            font-family: 'Consolas', monospace;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+
+        .rule-diagram {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #fafafa;
+            border-radius: 4px;
+        }
+
+        .rule-pattern {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pattern-input {
+            display: flex;
+            gap: 1px;
+        }
+
+        .pattern-cell {
+            width: 12px;
+            height: 12px;
+            border: 1px solid #bdc3c7;
+        }
+
+        .pattern-cell.alive {
+            background: #2c3e50;
+        }
+
+        .pattern-cell.dead {
+            background: #ecf0f1;
+        }
+
+        .pattern-output {
+            width: 14px;
+            height: 14px;
+            border: 1px solid #bdc3c7;
+        }
+
+        .info-section {
+            margin-bottom: 15px;
+        }
+
+        .info-section h3 {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .info-section p, .info-section ul {
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .info-section ul {
+            padding-left: 20px;
+        }
+
+        .classification {
+            font-style: italic;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        /* Statistics */
+        .stats-section {
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 5px 15px;
+            font-size: 0.9em;
+        }
+
+        .stats-grid dt {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .stats-grid dd {
+            font-family: 'Consolas', monospace;
+        }
+
+        /* Controls */
+        .controls-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin-top: 20px;
+            flex-shrink: 0;
+        }
+
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .controls-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .control-group select,
+        .control-group input[type="number"] {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .control-group input[type="range"] {
+            width: 80px;
+        }
+
+        .control-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+
+        .density-value, .speed-value {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            min-width: 35px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        /* Compare Legend */
+        .compare-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+            background: #fafafa;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .compare-section.hidden {
+            display: none;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85em;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border: 1px solid #bdc3c7;
+        }
+
+        .legend-color.rule-a {
+            background: #2c3e50;
+        }
+
+        .legend-color.rule-b {
+            background: #e74c3c;
+        }
+
+        /* Scrollbar styling */
+        .welcome-content::-webkit-scrollbar,
+        .canvas-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .welcome-content::-webkit-scrollbar-track,
+        .canvas-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .welcome-content::-webkit-scrollbar-thumb,
+        .canvas-container::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+
+        .welcome-content::-webkit-scrollbar-thumb:hover,
+        .canvas-container::-webkit-scrollbar-thumb:hover {
+            background: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome Screen -->
+    <div id="welcome-screen" class="container">
+        <h1>Cellular Automaton Explorer</h1>
+
+        <div class="welcome-content">
+            <h2>What is a Cellular Automaton?</h2>
+            <p>A cellular automaton is a computational model consisting of a grid of cells, each in one of a finite number of states. At each time step, every cell updates its state based on a simple rule that considers the cell and its neighbors.</p>
+            <p>This simulator explores one-dimensional elementary cellular automata, where each cell looks at itself and its two neighbors (left and right) to determine its next state. Time flows downward, with each row showing a new generation.</p>
+
+            <h2>How Rules Work</h2>
+            <p>Each rule is identified by a number from 0 to 255. The rule number encodes what happens for each of the 8 possible neighborhood patterns (3 cells = 2&sup3; = 8 patterns). The binary representation of the rule number directly specifies the output for each pattern.</p>
+            <p>For example, Rule 110 = 01101110 in binary. Reading right to left, this means:</p>
+            <ul>
+                <li>Pattern 000 (all dead) produces 0 (stays dead)</li>
+                <li>Pattern 001 produces 1 (becomes alive)</li>
+                <li>Pattern 010 produces 1, and so on...</li>
+            </ul>
+
+            <h2>Boundary Conditions</h2>
+            <p>Since our grid is finite, we need rules for what happens at the edges:</p>
+            <h3>Periodic</h3>
+            <p>The grid wraps around like a cylinder. The leftmost cell's left neighbor is the rightmost cell. This eliminates edge effects entirely.</p>
+            <h3>Fixed (dead)</h3>
+            <p>Cells outside the boundary are always 0. Patterns interact with empty space at the edges.</p>
+            <h3>Fixed (alive)</h3>
+            <p>Cells outside the boundary are always 1. Patterns interact with a wall of live cells.</p>
+            <h3>Reflective</h3>
+            <p>Edge cells are mirrored, as if there's a reflecting surface at the boundary.</p>
+
+            <h2>Notable Rules to Explore</h2>
+            <p><span class="rule-name">Rule 110</span> (Recommended starting point)<br>
+            Proven Turing complete by Matthew Cook in 2004. This means it can simulate any computation given the right initial conditions. Watch for 'gliders' - persistent structures that move across the grid.</p>
+
+            <p><span class="rule-name">Rule 30</span> (Chaotic)<br>
+            Produces chaotic, seemingly random patterns from a single cell. Used by Mathematica as a random number generator. The center column passes statistical randomness tests.</p>
+
+            <p><span class="rule-name">Rule 90</span> (Fractal)<br>
+            Creates the famous Sierpinski triangle fractal. Each cell is the XOR of its two neighbors, connecting to Pascal's triangle modulo 2.</p>
+
+            <p><span class="rule-name">Rule 184</span> (Traffic flow)<br>
+            Models traffic flow: cells (cars) move right if the space ahead is empty. Try random initial conditions to see congestion patterns emerge.</p>
+
+            <h2>Tips for Exploration</h2>
+            <ul>
+                <li>Start with a single cell to see the 'natural' pattern of each rule</li>
+                <li>Try random initial conditions to see how rules handle noise</li>
+                <li>Compare periodic vs fixed boundary conditions</li>
+                <li>Use comparison mode to see two rules side by side</li>
+                <li>Watch for: gliders, fractals, chaos, periodic patterns, and stable structures</li>
+            </ul>
+        </div>
+
+        <div class="welcome-footer">
+            <div class="control-group">
+                <label for="start-rule">Start with rule:</label>
+                <select id="start-rule">
+                    <option value="110" selected>110 - Turing Complete</option>
+                    <option value="30">30 - Chaotic</option>
+                    <option value="90">90 - Sierpinski Triangle</option>
+                    <option value="184">184 - Traffic Flow</option>
+                    <option value="54">54 - Complex</option>
+                    <option value="60">60 - Pascal's Triangle</option>
+                    <option value="150">150 - XOR Fractal</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="startExploring()">Start Exploring</button>
+        </div>
+    </div>
+
+    <!-- Simulation Screen -->
+    <div id="simulation-screen" class="container">
+        <div class="sim-header">
+            <h1>Cellular Automaton Explorer</h1>
+            <button class="btn btn-secondary" onclick="showWelcome()">Back to Guide</button>
+        </div>
+
+        <div class="main-layout">
+            <div class="canvas-panel">
+                <div class="canvas-container" id="canvas-container">
+                    <canvas id="sim-canvas"></canvas>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <h2 id="rule-name">Rule 110</h2>
+                <div class="binary-rep" id="binary-rep">Binary: 01101110</div>
+
+                <div class="rule-diagram" id="rule-diagram"></div>
+
+                <div class="info-section">
+                    <h3>Description</h3>
+                    <p id="rule-description">Rule 110 was proven Turing complete by Matthew Cook in 2004.</p>
+                </div>
+
+                <div class="info-section">
+                    <h3>Properties</h3>
+                    <ul id="rule-properties">
+                        <li>Proven Turing complete</li>
+                    </ul>
+                </div>
+
+                <div class="classification" id="rule-classification">Class IV - Complex</div>
+
+                <div class="stats-section">
+                    <h3>Statistics</h3>
+                    <dl class="stats-grid">
+                        <dt>Generation:</dt>
+                        <dd id="stat-generation">0</dd>
+                        <dt>Live cells:</dt>
+                        <dd id="stat-live-cells">0</dd>
+                        <dt>Density:</dt>
+                        <dd id="stat-density">0.0%</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-panel">
+            <div class="controls-row">
+                <div class="control-group">
+                    <label for="rule-select">Rule:</label>
+                    <input type="number" id="rule-select" min="0" max="255" value="110" style="width: 70px;">
+                </div>
+
+                <div class="control-group">
+                    <label for="initial-select">Initial:</label>
+                    <select id="initial-select">
+                        <option value="single">Single</option>
+                        <option value="random">Random</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+
+                <div class="control-group" id="density-control" style="display: none;">
+                    <label for="density-slider">Density:</label>
+                    <input type="range" id="density-slider" min="5" max="95" value="50">
+                    <span class="density-value" id="density-value">50%</span>
+                </div>
+
+                <div class="control-group">
+                    <label for="boundary-select">Boundary:</label>
+                    <select id="boundary-select">
+                        <option value="periodic">Periodic</option>
+                        <option value="fixed-0">Fixed (dead)</option>
+                        <option value="fixed-1">Fixed (alive)</option>
+                        <option value="reflective">Reflective</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label for="speed-slider">Speed:</label>
+                    <input type="range" id="speed-slider" min="1" max="60" value="20">
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" id="start-btn" onclick="toggleRunning()">Start</button>
+                    <button class="btn btn-secondary" onclick="step()">Step</button>
+                    <button class="btn btn-secondary" onclick="reset()">Reset</button>
+                </div>
+            </div>
+
+            <div class="controls-row">
+                <div class="control-group">
+                    <input type="checkbox" id="compare-check" onchange="toggleCompare()">
+                    <label for="compare-check">Compare with Rule:</label>
+                    <input type="number" id="compare-rule" min="0" max="255" value="30" style="width: 70px;" disabled>
+                </div>
+
+                <div class="compare-section hidden" id="compare-legend">
+                    <span>Legend:</span>
+                    <div class="legend-item">
+                        <div class="legend-color rule-a"></div>
+                        <span id="legend-a">Rule 110</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color rule-b"></div>
+                        <span id="legend-b">Rule 30</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Rule information database
+        const RULE_INFO = {
+            30: {
+                name: "Rule 30",
+                description: "Rule 30 produces chaotic, aperiodic behavior from simple initial conditions. It was discovered by Stephen Wolfram in 1983 and has been used as the random number generator in Mathematica.",
+                properties: ["Class III (chaotic) behavior", "Used for pseudorandom number generation", "Left side shows regular patterns", "Right side and center are chaotic"],
+                classification: "Class III - Chaotic"
+            },
+            54: {
+                name: "Rule 54",
+                description: "Rule 54 exhibits complex Class IV behavior similar to Rule 110. It produces intricate patterns with triangular structures and has been studied for its computational properties.",
+                properties: ["Class IV (complex) behavior", "Triangular structures", "Glider-like particles", "Possibly Turing complete"],
+                classification: "Class IV - Complex"
+            },
+            60: {
+                name: "Rule 60",
+                description: "Rule 60 produces Pascal's triangle modulo 2, identical to the Sierpinski triangle but with a different orientation. Each cell is the XOR of itself and its left neighbor.",
+                properties: ["Generates Pascal's triangle mod 2", "Linear/additive rule", "Left-leaning Sierpinski pattern", "Predictable evolution"],
+                classification: "Class II - Periodic/Fractal"
+            },
+            90: {
+                name: "Rule 90",
+                description: "Rule 90 generates the Sierpinski triangle fractal pattern. Each cell is the XOR of its two diagonal neighbors from the previous generation. It has deep connections to Pascal's triangle modulo 2.",
+                properties: ["Produces Sierpinski triangle", "Linear/additive rule (XOR-based)", "Self-similar fractal structure", "Fully predictable behavior"],
+                classification: "Class II - Periodic/Fractal"
+            },
+            110: {
+                name: "Rule 110",
+                description: "Rule 110 was proven Turing complete by Matthew Cook in 2004, meaning it can simulate any computation. It exhibits complex behavior at the edge of chaos, with localized structures ('gliders') that interact.",
+                properties: ["Proven Turing complete", "Class IV (complex) behavior", "Supports localized structures", "Gliders and persistent patterns"],
+                classification: "Class IV - Complex"
+            },
+            150: {
+                name: "Rule 150",
+                description: "Rule 150 is an XOR-based rule where each cell becomes the XOR of itself and both neighbors. It produces complex fractal patterns and is one of the additive (linear) elementary cellular automata.",
+                properties: ["XOR of cell and both neighbors", "Linear/additive rule", "Fractal patterns", "Complex but predictable"],
+                classification: "Class II - Fractal"
+            },
+            184: {
+                name: "Rule 184",
+                description: "Rule 184 is a simple model of traffic flow. Cells representing cars move right if the space ahead is empty. It demonstrates phase transitions between free flow and congested states.",
+                properties: ["Models traffic flow", "Particle conservation rule", "Phase transition behavior", "Number-conserving"],
+                classification: "Class II - Periodic"
+            }
+        };
+
+        // Global state
+        let canvas, ctx;
+        let cellSize = 4;
+        let gridWidth, gridHeight;
+        let state = [];
+        let stateB = [];
+        let history = [];
+        let historyB = [];
+        let running = false;
+        let animationId = null;
+        let currentRule = 110;
+        let compareRule = 30;
+        let compareMode = false;
+        let boundary = 'periodic';
+        let initialMode = 'single';
+        let density = 0.5;
+        let speed = 20;
+        let drawingMode = false;
+        let scrollOffset = 0;
+        let maxVisibleRows;
+
+        const CELL_COLOR = '#2c3e50';
+        const CELL_COLOR_B = '#e74c3c';
+
+        // Initialize
+        function init() {
+            canvas = document.getElementById('sim-canvas');
+            ctx = canvas.getContext('2d');
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Canvas events
+            canvas.addEventListener('click', onCanvasClick);
+            canvas.addEventListener('mousemove', onCanvasMove);
+            canvas.addEventListener('wheel', onCanvasWheel);
+
+            // Control events
+            document.getElementById('rule-select').addEventListener('change', onRuleChange);
+            document.getElementById('rule-select').addEventListener('input', onRuleChange);
+            document.getElementById('initial-select').addEventListener('change', onInitialChange);
+            document.getElementById('density-slider').addEventListener('input', onDensityChange);
+            document.getElementById('boundary-select').addEventListener('change', onBoundaryChange);
+            document.getElementById('speed-slider').addEventListener('input', onSpeedChange);
+            document.getElementById('compare-rule').addEventListener('change', onCompareRuleChange);
+            document.getElementById('compare-rule').addEventListener('input', onCompareRuleChange);
+        }
+
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            const width = container.clientWidth - 2;
+            const height = container.clientHeight - 2;
+
+            // Ensure minimum dimensions
+            const finalHeight = Math.max(height, 300);
+
+            canvas.width = width;
+            canvas.height = finalHeight;
+
+            gridWidth = Math.floor(width / cellSize);
+            maxVisibleRows = Math.floor(finalHeight / cellSize);
+
+            if (history.length > 0) {
+                draw();
+            }
+        }
+
+        // Rule logic
+        function applyRule(left, center, right, rule) {
+            const pattern = (left << 2) | (center << 1) | right;
+            return (rule >> pattern) & 1;
+        }
+
+        function getCell(arr, index, boundaryType) {
+            if (index >= 0 && index < arr.length) {
+                return arr[index];
+            }
+
+            switch (boundaryType) {
+                case 'periodic':
+                    return arr[((index % arr.length) + arr.length) % arr.length];
+                case 'fixed-0':
+                    return 0;
+                case 'fixed-1':
+                    return 1;
+                case 'reflective':
+                    return index < 0 ? arr[0] : arr[arr.length - 1];
+                default:
+                    return 0;
+            }
+        }
+
+        function computeNextGeneration(currentState, rule, boundaryType) {
+            const next = new Array(currentState.length);
+            for (let i = 0; i < currentState.length; i++) {
+                const left = getCell(currentState, i - 1, boundaryType);
+                const center = currentState[i];
+                const right = getCell(currentState, i + 1, boundaryType);
+                next[i] = applyRule(left, center, right, rule);
+            }
+            return next;
+        }
+
+        // Initialization modes
+        function initSingle(width) {
+            const arr = new Array(width).fill(0);
+            arr[Math.floor(width / 2)] = 1;
+            return arr;
+        }
+
+        function initRandom(width, dens) {
+            return Array.from({length: width}, () => Math.random() < dens ? 1 : 0);
+        }
+
+        function initEmpty(width) {
+            return new Array(width).fill(0);
+        }
+
+        // Drawing
+        function draw() {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const totalRows = history.length;
+            const startRow = Math.max(0, totalRows - maxVisibleRows - scrollOffset);
+            const endRow = Math.min(totalRows, startRow + maxVisibleRows);
+
+            if (compareMode && historyB.length > 0) {
+                const halfWidth = Math.floor(gridWidth / 2);
+                const xOffsetB = halfWidth * cellSize;
+
+                // Draw dividing line
+                ctx.strokeStyle = '#bdc3c7';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(xOffsetB, 0);
+                ctx.lineTo(xOffsetB, canvas.height);
+                ctx.stroke();
+
+                // Draw Rule A (left half)
+                ctx.fillStyle = CELL_COLOR;
+                for (let row = startRow; row < endRow; row++) {
+                    const y = (row - startRow) * cellSize;
+                    const gen = history[row];
+                    for (let col = 0; col < halfWidth && col < gen.length; col++) {
+                        if (gen[col]) {
+                            ctx.fillRect(col * cellSize, y, cellSize, cellSize);
+                        }
+                    }
+                }
+
+                // Draw Rule B (right half)
+                ctx.fillStyle = CELL_COLOR_B;
+                for (let row = startRow; row < Math.min(endRow, historyB.length); row++) {
+                    const y = (row - startRow) * cellSize;
+                    const gen = historyB[row];
+                    for (let col = 0; col < halfWidth && col < gen.length; col++) {
+                        if (gen[col]) {
+                            ctx.fillRect(xOffsetB + col * cellSize, y, cellSize, cellSize);
+                        }
+                    }
+                }
+            } else {
+                // Normal mode
+                ctx.fillStyle = CELL_COLOR;
+                for (let row = startRow; row < endRow; row++) {
+                    const y = (row - startRow) * cellSize;
+                    const gen = history[row];
+                    for (let col = 0; col < gen.length; col++) {
+                        if (gen[col]) {
+                            ctx.fillRect(col * cellSize, y, cellSize, cellSize);
+                        }
+                    }
+                }
+            }
+
+            // Draw grid lines for first row in custom mode
+            if (drawingMode && history.length === 1) {
+                ctx.strokeStyle = '#eee';
+                ctx.lineWidth = 0.5;
+                for (let col = 0; col <= gridWidth; col++) {
+                    ctx.beginPath();
+                    ctx.moveTo(col * cellSize, 0);
+                    ctx.lineTo(col * cellSize, cellSize);
+                    ctx.stroke();
+                }
+                ctx.beginPath();
+                ctx.moveTo(0, cellSize);
+                ctx.lineTo(gridWidth * cellSize, cellSize);
+                ctx.stroke();
+            }
+        }
+
+        function drawRuleDiagram() {
+            const container = document.getElementById('rule-diagram');
+            container.innerHTML = '';
+
+            const binary = currentRule.toString(2).padStart(8, '0');
+
+            for (let i = 0; i < 8; i++) {
+                const pattern = 7 - i;
+                const output = binary[i] === '1';
+
+                const patternDiv = document.createElement('div');
+                patternDiv.className = 'rule-pattern';
+
+                const inputDiv = document.createElement('div');
+                inputDiv.className = 'pattern-input';
+
+                for (let j = 2; j >= 0; j--) {
+                    const cell = document.createElement('div');
+                    cell.className = 'pattern-cell ' + ((pattern >> j) & 1 ? 'alive' : 'dead');
+                    inputDiv.appendChild(cell);
+                }
+
+                const arrow = document.createElement('div');
+                arrow.textContent = '↓';
+                arrow.style.fontSize = '10px';
+                arrow.style.color = '#999';
+
+                const outputDiv = document.createElement('div');
+                outputDiv.className = 'pattern-output ' + (output ? 'alive' : 'dead');
+                outputDiv.style.background = output ? CELL_COLOR : '#ecf0f1';
+
+                patternDiv.appendChild(inputDiv);
+                patternDiv.appendChild(arrow);
+                patternDiv.appendChild(outputDiv);
+                container.appendChild(patternDiv);
+            }
+        }
+
+        // Simulation controls
+        function step() {
+            state = computeNextGeneration(state, currentRule, boundary);
+            history.push([...state]);
+
+            if (compareMode) {
+                stateB = computeNextGeneration(stateB, compareRule, boundary);
+                historyB.push([...stateB]);
+            }
+
+            scrollOffset = 0;
+            draw();
+            updateStats();
+        }
+
+        function toggleRunning() {
+            running = !running;
+            document.getElementById('start-btn').textContent = running ? 'Pause' : 'Start';
+
+            if (running) {
+                runLoop();
+            } else if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+
+        let lastTime = 0;
+        function runLoop(timestamp) {
+            if (!running) return;
+
+            const interval = 1000 / speed;
+            if (timestamp - lastTime >= interval) {
+                step();
+                lastTime = timestamp;
+            }
+
+            animationId = requestAnimationFrame(runLoop);
+        }
+
+        function reset() {
+            running = false;
+            document.getElementById('start-btn').textContent = 'Start';
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            scrollOffset = 0;
+
+            switch (initialMode) {
+                case 'single':
+                    state = initSingle(gridWidth);
+                    break;
+                case 'random':
+                    state = initRandom(gridWidth, density);
+                    break;
+                case 'custom':
+                    state = initEmpty(gridWidth);
+                    break;
+            }
+
+            history = [[...state]];
+
+            if (compareMode) {
+                stateB = [...history[0]];
+                historyB = [[...stateB]];
+            }
+
+            draw();
+            updateStats();
+        }
+
+        function updateStats() {
+            const generation = history.length - 1;
+            const liveCells = state.reduce((sum, cell) => sum + cell, 0);
+            const densityPct = (liveCells / state.length * 100).toFixed(1);
+
+            document.getElementById('stat-generation').textContent = generation;
+            document.getElementById('stat-live-cells').textContent = liveCells;
+            document.getElementById('stat-density').textContent = densityPct + '%';
+        }
+
+        function updateInfoPanel() {
+            const info = RULE_INFO[currentRule];
+
+            document.getElementById('rule-name').textContent = info ? info.name : `Rule ${currentRule}`;
+            document.getElementById('binary-rep').textContent = `Binary: ${currentRule.toString(2).padStart(8, '0')}`;
+
+            if (info) {
+                document.getElementById('rule-description').textContent = info.description;
+                document.getElementById('rule-properties').innerHTML = info.properties.map(p => `<li>${p}</li>`).join('');
+                document.getElementById('rule-classification').textContent = info.classification;
+            } else {
+                document.getElementById('rule-description').textContent = `Rule ${currentRule} is one of the 256 elementary cellular automaton rules. Explore its behavior by running the simulation with different initial conditions.`;
+                document.getElementById('rule-properties').innerHTML = '<li>No special properties documented</li><li>Try notable rules: 30, 90, 110, 184</li>';
+                document.getElementById('rule-classification').textContent = 'Classification unknown';
+            }
+
+            drawRuleDiagram();
+        }
+
+        // Event handlers
+        function onRuleChange(e) {
+            let value = parseInt(e.target.value);
+            if (isNaN(value)) value = 110;
+            value = Math.max(0, Math.min(255, value));
+            e.target.value = value;
+            currentRule = value;
+            updateInfoPanel();
+            updateLegend();
+            reset();
+        }
+
+        function onInitialChange(e) {
+            initialMode = e.target.value;
+            const densityControl = document.getElementById('density-control');
+
+            if (initialMode === 'random') {
+                densityControl.style.display = 'flex';
+            } else {
+                densityControl.style.display = 'none';
+            }
+
+            drawingMode = (initialMode === 'custom');
+            canvas.classList.toggle('drawing-mode', drawingMode);
+
+            reset();
+        }
+
+        function onDensityChange(e) {
+            density = parseInt(e.target.value) / 100;
+            document.getElementById('density-value').textContent = e.target.value + '%';
+            if (initialMode === 'random') {
+                reset();
+            }
+        }
+
+        function onBoundaryChange(e) {
+            boundary = e.target.value;
+            reset();
+        }
+
+        function onSpeedChange(e) {
+            speed = parseInt(e.target.value);
+        }
+
+        function toggleCompare() {
+            compareMode = document.getElementById('compare-check').checked;
+            document.getElementById('compare-rule').disabled = !compareMode;
+            document.getElementById('compare-legend').classList.toggle('hidden', !compareMode);
+            updateLegend();
+            reset();
+        }
+
+        function onCompareRuleChange(e) {
+            let value = parseInt(e.target.value);
+            if (isNaN(value)) value = 30;
+            value = Math.max(0, Math.min(255, value));
+            e.target.value = value;
+            compareRule = value;
+            updateLegend();
+            reset();
+        }
+
+        function updateLegend() {
+            document.getElementById('legend-a').textContent = `Rule ${currentRule}`;
+            document.getElementById('legend-b').textContent = `Rule ${compareRule}`;
+        }
+
+        function onCanvasClick(e) {
+            if (!drawingMode || running) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (y > cellSize) return; // Only allow clicking first row
+
+            const col = Math.floor(x / cellSize);
+            if (col >= 0 && col < gridWidth) {
+                state[col] = state[col] ? 0 : 1;
+                history[0] = [...state];
+                if (compareMode) {
+                    stateB[col] = state[col];
+                    historyB[0] = [...stateB];
+                }
+                draw();
+                updateStats();
+            }
+        }
+
+        function onCanvasMove(e) {
+            if (!drawingMode || running) return;
+            if (e.buttons !== 1) return; // Left mouse button
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (y > cellSize) return;
+
+            const col = Math.floor(x / cellSize);
+            if (col >= 0 && col < gridWidth && state[col] === 0) {
+                state[col] = 1;
+                history[0] = [...state];
+                if (compareMode) {
+                    stateB[col] = 1;
+                    historyB[0] = [...stateB];
+                }
+                draw();
+                updateStats();
+            }
+        }
+
+        function onCanvasWheel(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -1 : 1;
+            const maxScroll = Math.max(0, history.length - maxVisibleRows);
+            scrollOffset = Math.max(0, Math.min(maxScroll, scrollOffset - delta * 3));
+            draw();
+        }
+
+        // Navigation
+        function startExploring() {
+            currentRule = parseInt(document.getElementById('start-rule').value);
+            document.getElementById('rule-select').value = currentRule;
+
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('simulation-screen').classList.add('active');
+
+            init();
+            // Delay to allow layout to settle before sizing canvas
+            setTimeout(() => {
+                resizeCanvas();
+                updateInfoPanel();
+                reset();
+            }, 50);
+        }
+
+        function showWelcome() {
+            running = false;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+
+            document.getElementById('simulation-screen').classList.remove('active');
+            document.getElementById('welcome-screen').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
