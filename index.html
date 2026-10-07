@@ -510,16 +510,22 @@
 .tool-page :is(button,select,summary) { min-height:36px; }
 .tool-page h1 { font-family:var(--tool-serif); font-size:32px; line-height:1.2; font-weight:500; letter-spacing:normal; }
 .tool-page :is(h2,h3) { font-family:var(--tool-serif); }
-.tool-page :is(a,button,input,select,textarea,summary,[tabindex]):focus-visible { outline:2px solid currentColor!important; outline-offset:3px; }
-.tool-page .tool-methodology { max-width:72ch; margin:24px auto; padding:16px; border-top:1px solid #bbb; font:17px/1.55 var(--tool-serif); }
-.tool-methodology summary { cursor:pointer; font-weight:600; }
-.tool-methodology h3 { margin:18px 0 6px; font-size:22px; }
-.tool-methodology p { margin:8px 0; }
+.tool-page :is(a,button,input,select,textarea,summary,[tabindex]):focus-visible { outline:2px solid #222!important; outline-offset:3px; box-shadow:0 0 0 3px #fff!important; }
+.tool-page .tool-methodology { box-sizing:border-box; grid-column:1 / -1; width:100%; max-width:none; margin:24px 0 0; padding:16px 0; border:0; border-top:1px solid #bbb; border-radius:0; background:transparent; color:#222; font:18px/1.55 var(--tool-serif); text-align:left; }
+.tool-page .tool-methodology > summary { cursor:pointer; font:400 21px/1.4 var(--tool-serif)!important; letter-spacing:normal; text-transform:none; }
+.tool-page .tool-methodology h3 { margin:20px 0 6px; font:400 20px/1.4 var(--tool-serif); letter-spacing:normal; text-transform:none; }
+.tool-page .tool-methodology :is(p,li) { max-width:none; font:inherit; }
+.tool-page .tool-methodology p { margin:8px 0; }
+.tool-page .tool-methodology a { color:inherit; text-decoration:underline; text-underline-offset:3px; }
+.tool-page .tool-methodology .equation { overflow-x:auto; padding:10px 0; font-size:17px; }
+.tool-page .tool-methodology table { width:100%; border-collapse:collapse; font:inherit; }
+.tool-page .tool-methodology :is(th,td) { padding:8px; border-bottom:1px solid #ddd; text-align:left; font-weight:400; vertical-align:top; }
 @media(max-width:600px) { .tool-page :is(button,select,summary) { min-height:44px; } }
 @media(prefers-reduced-motion:reduce) { .tool-page *, .tool-page *::before, .tool-page *::after { scroll-behavior:auto!important; transition:none!important; } }
-
 /* Tool-specific styles */
-html,body{font-size:16px}.tool-page{height:auto;overflow:auto}.tool-page .app-container{height:auto;min-height:calc(100dvh - 48px)}.tool-page :is(.btn,.btn-outline,.control-group label,.status-bar,.info-title,.stat-label,.rule-description){font-size:14px}.tool-page .welcome-content{overflow:visible;font:17px/1.55 var(--tool-serif)}.tool-page #welcome-screen{flex:none;overflow:visible}.tool-page .top-bar{flex-wrap:wrap;gap:8px;background:#fff;color:#222}.tool-page .top-bar .btn-outline{color:#222;border-color:#777}.tool-page .top-bar h1{font-size:28px}.tool-page .canvas-wrapper{min-height:420px}.tool-page .main-area{min-height:520px}.tool-page #simulation-screen{overflow:visible}.tool-page .info-content{font-size:14px}@media(max-width:700px){.tool-page .main-area{display:block}.tool-page .info-panel{display:block;width:100%;border-left:0;border-top:1px solid #ccc}.tool-page .info-panel.collapsed{width:100%}.tool-page .canvas-wrapper{height:420px;flex:none}.tool-page .control-group{flex-wrap:wrap}}</style>
+.tool-page .welcome-content h2{font:400 21px/1.4 var(--tool-serif)}
+
+html,body{font-size:16px;height:auto;min-height:100%;overflow:visible}html{overflow-y:auto}.tool-page{height:auto;overflow:auto}.tool-page .app-container{height:auto;min-height:calc(100dvh - 48px)}.tool-page :is(.btn,.btn-outline,.control-group label,.status-bar,.info-title,.stat-label,.rule-description){font-size:14px}.tool-page .welcome-content{overflow:visible;font:17px/1.55 var(--tool-serif)}.tool-page #welcome-screen{flex:none;overflow:visible}.tool-page .top-bar{flex-wrap:wrap;gap:8px;background:#fff;color:#222}.tool-page .top-bar .btn-outline{color:#222;border-color:#777}.tool-page .top-bar h1{font-size:28px}.tool-page .canvas-wrapper{min-height:420px}.tool-page .main-area{min-height:520px}.tool-page #simulation-screen{overflow:visible}.tool-page .info-content{font-size:14px}@media(max-width:700px){.tool-page .main-area{display:block}.tool-page .info-panel{display:block;width:100%;border-left:0;border-top:1px solid #ccc}.tool-page .info-panel.collapsed{width:100%}.tool-page .canvas-wrapper{height:420px;flex:none}.tool-page .control-group{flex-wrap:wrap}}</style>
 </head>
 <body class="tool-page">
 <nav class="tool-navigation" aria-label="Interactive tools"><a href="https://www.davidpeterwallisfreeborn.com/fun/">← Back to Interactive Tools</a></nav>
@@ -531,11 +537,25 @@ html,body{font-size:16px}.tool-page{height:auto;overflow:auto}.tool-page .app-co
                 <h1 id="explorer-title">Cellular Automaton Explorer</h1>
             </div>
 
+            <div class="welcome-footer">
+                <div class="control-group">
+                    <label for="start-rule">Start with:</label>
+                    <select id="start-rule">
+                        <option value="110">Rule 110</option>
+                        <option value="30">Rule 30</option>
+                        <option value="90">Rule 90</option>
+                        <option value="184">Rule 184</option>
+                        <option value="54">Rule 54</option>
+                        <option value="60">Rule 60</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="startExploring()">Start</button>
+            </div>
             <div class="welcome-content">
                 <h2>What is a Cellular Automaton?</h2>
                 <p>A cellular automaton is a grid of cells that evolve over time according to simple rules. Each cell looks at itself and its neighbors to determine its next state. Time flows downward, with each row showing a new generation.</p>
 
-                <h2>How Rules Work</h2>
+                <h2>Rules</h2>
                 <p>Each rule (0-255) defines what happens for each of the 8 possible neighborhood patterns. The binary representation of the rule number specifies the output for each pattern.</p>
 
                 <h2>Notable Rules</h2>
@@ -559,30 +579,9 @@ html,body{font-size:16px}.tool-page{height:auto;overflow:auto}.tool-page .app-co
                     <li><strong>Fixed (alive):</strong> Cells outside are always 1</li>
                     <li><strong>Reflective:</strong> Edges act like mirrors</li>
                 </ul>
-
-                <h2>Tips</h2>
-                <ul>
-                    <li>Use "single" initial condition to see the natural pattern</li>
-                    <li>Use "random" to see how rules handle noise</li>
-                    <li>Use "custom" to draw your own starting pattern</li>
-                    <li>Enable comparison mode to see two rules side-by-side</li>
-                </ul>
             </div>
 
-            <div class="welcome-footer">
-                <div class="control-group">
-                    <label for="start-rule">Start with:</label>
-                    <select id="start-rule">
-                        <option value="110">Rule 110</option>
-                        <option value="30">Rule 30</option>
-                        <option value="90">Rule 90</option>
-                        <option value="184">Rule 184</option>
-                        <option value="54">Rule 54</option>
-                        <option value="60">Rule 60</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary" onclick="startExploring()">Start</button>
-            </div>
+
         </div>
 
         <!-- Simulation Screen -->
@@ -612,7 +611,7 @@ html,body{font-size:16px}.tool-page{height:auto;overflow:auto}.tool-page .app-co
                     <div class="controls-bar">
                         <div class="control-group">
                             <label for="rule-select">Rule:</label>
-                            <input type="number" id="rule-select" min="0" max="255" value="110" style="width:55px;">
+                            <input type="number" id="rule-select" min="0" max="255" value="110" style="width:76px;">
                         </div>
                         <div class="control-group">
                             <label for="initial-select">Initial:</label>
@@ -643,7 +642,7 @@ html,body{font-size:16px}.tool-page{height:auto;overflow:auto}.tool-page .app-co
                         <div class="control-group">
                             <input type="checkbox" id="compare-check">
                             <label for="compare-check">Compare:</label>
-                            <input type="number" aria-label="Comparison rule" id="compare-rule" min="0" max="255" value="30" style="width:50px;" disabled>
+                            <input type="number" aria-label="Comparison rule" id="compare-rule" min="0" max="255" value="30" style="width:76px;" disabled>
                         </div>
                         <div class="control-buttons">
                             <button class="btn-action" id="start-btn" onclick="toggleRunning()">Start</button>
